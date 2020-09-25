@@ -284,18 +284,18 @@ class TimeOrderPointwiseSampler(Sampler):
                                                   len_next=len_next, pad=pad)
 
         self.all_users = np.tile(users_arr, self.num_neg+1)
-        self.all_item_seqs = np.tile(item_seqs_arr, self.num_neg+1)
+        self.all_item_seqs = np.tile(item_seqs_arr, [self.num_neg+1, 1])
 
         len_pos = len(self.pos_next_items)
         pos_labels = np.full([len_pos, len_next], 1.0, dtype=np.float32)
         neg_labels = np.full([len_pos*self.num_neg, len_next], 0.0, dtype=np.float32)
-        self.all_labels = np.concatenate([pos_labels, neg_labels])
+        self.all_labels = np.concatenate([pos_labels, neg_labels]).squeeze()
 
     def __iter__(self):
         neg_next_items = _sampling_negative_items(self.user_n_pos, self.num_neg*self.len_next,
                                                   self.num_items, self.user_pos_dict)
         neg_item_split = np.hsplit(neg_next_items, self.num_neg)
-        neg_next_items = np.vstack(neg_item_split)
+        neg_next_items = np.vstack(neg_item_split).squeeze()
         all_next_items = np.concatenate([self.pos_next_items, neg_next_items])
 
         data_iter = DataIterator(self.all_users, self.all_item_seqs, all_next_items, self.all_labels,
